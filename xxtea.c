@@ -43,10 +43,23 @@ int print_opterr(int opt)
 #define S_PART_LEN 8
 #define S_PART_CAP (S_PART_LEN + 1)
 
+uint32_t parse_key_part(char *s_key, size_t offset)
+{
+    char s_part [S_PART_CAP];
+
+    strncpy(s_part, s_key + offset, S_PART_LEN);
+    s_part[S_PART_LEN] = '\0';
+
+    assert(sizeof(unsigned long) >= 4);
+    return (uint32_t) strtoul(s_part, NULL, 16);
+}
+
+#define KEY_PARTS_COUNT 4
 int read_key(char *keyfile, uint32_t *key)
 {
     char s_key [S_KEY_CAP];
     FILE * f;
+    int i;
 
     f = fopen (keyfile, "r");
     if(f == NULL) {
@@ -56,21 +69,8 @@ int read_key(char *keyfile, uint32_t *key)
     
     if ((fgets(s_key, S_KEY_CAP, f) != NULL) && strlen(s_key) == S_KEY_LEN)
     {
-        strncpy(s_part_0, s_key, 8);
-        s_part_0[8] = '\0';
-        key[0] = strtoul(s_part_0, NULL, 16);
-        
-        strncpy(s_part_1, &(s_key[8]), 8);
-        s_part_1[8] = '\0';
-        key[1] = strtoul(s_part_1, NULL, 16);
-        
-        strncpy(s_part_2, &(s_key[16]), 8);
-        s_part_2[8] = '\0';
-        key[2] = strtoul(s_part_2, NULL, 16);
-        
-        strncpy(s_part_3, &(s_key[24]), 8);
-        s_part_3[8] = '\0';
-        key[3] = strtoul(s_part_3, NULL, 16);
+        for(i = 0; i < KEY_PARTS_COUNT; ++i)
+            key[i] = parse_key_part(s_key, i * S_PART_LEN);
         
         fclose(f);
         return 0;
