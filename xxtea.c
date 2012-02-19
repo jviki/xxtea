@@ -8,13 +8,15 @@
  * Author: Vlastimil Kosar <ikosar@fit.vutbr.cz> 
  */
 
+#include "crypto.h"
+
 #include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include "crypto.h"
+#include <assert.h>
 
 int print_help(const char *prog)
 {
