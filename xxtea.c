@@ -38,13 +38,14 @@ int print_opterr(int opt)
     return 1;
 }
 
+#define S_KEY_LEN 32
+#define S_KEY_CAP (S_KEY_LEN + 1)
+#define S_PART_LEN 8
+#define S_PART_CAP (S_PART_LEN + 1)
+
 int read_key(char *keyfile, uint32_t *key)
 {
-    char s_key [33];
-    char s_part_0 [9];
-    char s_part_1 [9];
-    char s_part_2 [9];
-    char s_part_3 [9];
+    char s_key [S_KEY_CAP];
     FILE * f;
 
     f = fopen (keyfile, "r");
@@ -53,7 +54,7 @@ int read_key(char *keyfile, uint32_t *key)
         return 1;
     }
     
-    if ((fgets(s_key, 33, f) != NULL) && strlen(s_key) == 32)
+    if ((fgets(s_key, S_KEY_CAP, f) != NULL) && strlen(s_key) == S_KEY_LEN)
     {
         strncpy(s_part_0, s_key, 8);
         s_part_0[8] = '\0';
