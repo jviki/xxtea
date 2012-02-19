@@ -8,13 +8,15 @@
  * Author: Vlastimil Kosar <ikosar@fit.vutbr.cz> 
  */
 
+#include "crypto.h"
+
 #include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include "crypto.h"
+#include <assert.h>
 
 int print_help(const char *prog)
 {
@@ -36,14 +38,29 @@ int print_opterr(int opt)
     return 1;
 }
 
+#define S_KEY_LEN 32
+#define S_KEY_CAP (S_KEY_LEN + 1)
+#define S_PART_LEN 8
+#define S_PART_CAP (S_PART_LEN + 1)
+
+uint32_t parse_key_part(char *s_key, size_t offset)
+{
+    char s_part [S_PART_CAP];
+
+    strncpy(s_part, s_key + offset, S_PART_LEN);
+    s_part[S_PART_LEN] = '\0';
+
+    assert(sizeof(unsigned long) >= 4);
+    return (uint32_t) strtoul(s_part, NULL, 16);
+}
+
+#define KEY_PARTS_COUNT 4
+
 int read_key(char *keyfile, uint32_t *key)
 {
-    char s_key [33];
-    char s_part_0 [9];
-    char s_part_1 [9];
-    char s_part_2 [9];
-    char s_part_3 [9];
+    char s_key [S_KEY_CAP];
     FILE * f;
+    int i;
 
     f = fopen (keyfile, "r");
     if(f == NULL) {
@@ -51,23 +68,10 @@ int read_key(char *keyfile, uint32_t *key)
         return 1;
     }
     
-    if ((fgets(s_key, 33, f) != NULL) && strlen(s_key) == 32)
+    if ((fgets(s_key, S_KEY_CAP, f) != NULL) && strlen(s_key) == S_KEY_LEN)
     {
-        strncpy(s_part_0, s_key, 8);
-        s_part_0[8] = '\0';
-        key[0] = strtoul(s_part_0, NULL, 16);
-        
-        strncpy(s_part_1, &(s_key[8]), 8);
-        s_part_1[8] = '\0';
-        key[1] = strtoul(s_part_1, NULL, 16);
-        
-        strncpy(s_part_2, &(s_key[16]), 8);
-        s_part_2[8] = '\0';
-        key[2] = strtoul(s_part_2, NULL, 16);
-        
-        strncpy(s_part_3, &(s_key[24]), 8);
-        s_part_3[8] = '\0';
-        key[3] = strtoul(s_part_3, NULL, 16);
+        for(i = 0; i < KEY_PARTS_COUNT; ++i)
+            key[i] = parse_key_part(s_key, i * S_PART_LEN);
         
         fclose(f);
         return 0;
@@ -81,12 +85,15 @@ int read_key(char *keyfile, uint32_t *key)
     return 1;
 }
 
+#define BLOCK_SIZE 512
+#define CRYPT_ATONCE_SIZE 128
+
 int crypt_file(char *infile, char *outfile, char *keyfile)
 {
     FILE * f;
     FILE * of;
-    uint32_t key[4] = {0,0,0,0};
-    uint8_t block[512];
+    uint32_t key[KEY_PARTS_COUNT] = {0,0,0,0};
+    uint8_t block[BLOCK_SIZE];
     int size;
     int last = 0;
     
@@ -108,23 +115,23 @@ int crypt_file(char *infile, char *outfile, char *keyfile)
         return 1;
     }
     
-    while ((size = fread(block, sizeof(uint8_t), 512, f)) == 512 || (size > 0 && feof(f) && !last))
+    while ((size = fread(block, sizeof(uint8_t), BLOCK_SIZE, f)) == BLOCK_SIZE || (size > 0 && feof(f) && !last))
     {
         int i = 0;
-        for (i = size; i < 512; i++)
+        for (i = size; i < BLOCK_SIZE; i++)
         {
             block[i] = '0';
         }
         
-        crypt((uint32_t *)block, 128, key);
+        crypt((uint32_t *)block, CRYPT_ATONCE_SIZE, key);
         
-        if (size < 512)
+        if (size < BLOCK_SIZE)
         {
             last = 1;
         }
         
-        size = fwrite(block, sizeof(uint8_t), 512, of);
-        if (size < 512)
+        size = fwrite(block, sizeof(uint8_t), BLOCK_SIZE, of);
+        if (size < BLOCK_SIZE)
         {
             fprintf(stderr, "Error while writing into '%s'.\n", outfile);
             fclose(f);
@@ -142,8 +149,8 @@ int decrypt_file(char *infile, char *outfile, char *keyfile)
 {
     FILE * f;
     FILE * of;
-    uint32_t key[4] = {0,0,0,0};
-    uint8_t block[512];
+    uint32_t key[KEY_PARTS_COUNT] = {0,0,0,0};
+    uint8_t block[BLOCK_SIZE];
     int size;
     
     if (read_key(keyfile, key) != 0)
@@ -164,12 +171,12 @@ int decrypt_file(char *infile, char *outfile, char *keyfile)
         return 1;
     }
     
-    while ((size = fread(block, sizeof(uint8_t), 512, f)) == 512 )
+    while ((size = fread(block, sizeof(uint8_t), BLOCK_SIZE, f)) == BLOCK_SIZE)
     {      
-        decrypt((uint32_t *)block, 128, key);
+        decrypt((uint32_t *)block, CRYPT_ATONCE_SIZE, key);
                 
-        size = fwrite(block, sizeof(uint8_t), 512, of);
-        if (size < 512)
+        size = fwrite(block, sizeof(uint8_t), BLOCK_SIZE, of);
+        if (size < BLOCK_SIZE)
         {
             fprintf(stderr, "Error while writing into '%s'.\n", outfile);
             fclose(f);

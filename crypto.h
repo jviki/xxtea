@@ -7,6 +7,8 @@
  * Author: Vlastimil Kosar <ikosar@fit.vutbr.cz> 
  */
 
+#include <stdint.h>
+
 /*
  * Decrypt block by XXTEA.
  * Params:
