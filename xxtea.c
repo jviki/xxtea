@@ -18,9 +18,9 @@
 
 int print_help(const char *prog)
 {
-    fprintf(stderr, "Usage: %s [ -h | -c | -d ] [ -i <input file> ] [ -o <output file> ] [ -k <key file>]\n", prog);
+    fprintf(stderr, "Usage: %s [ -h | -c | -d ] [ -i <input file> ] [ -o <output file> ] [ -k <key file> ]\n", prog);
     fprintf(stderr, "Crypt and decrypt file by XXTEA cipher. Input file is padded to 512B boundary.\n");
-    fprintf(stderr, "Key file must contains exactly 32 hexadecimal characters.\n");
+    fprintf(stderr, "Key file must contain exactly 32 hexadecimal characters.\n");
     fprintf(stderr, "Examples:\n");
     fprintf(stderr, "* Crypt file in.bin to file out.bin with key file key.txt:\n");
     fprintf(stderr, "  $ %s -c -i in.bin -o out.bin -k key.txt\n", prog);
