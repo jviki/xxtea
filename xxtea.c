@@ -84,12 +84,14 @@ int read_key(char *keyfile, uint32_t *key)
     return 1;
 }
 
+#define BLOCK_SIZE 512
+
 int crypt_file(char *infile, char *outfile, char *keyfile)
 {
     FILE * f;
     FILE * of;
     uint32_t key[KEY_PARTS_COUNT] = {0,0,0,0};
-    uint8_t block[512];
+    uint8_t block[BLOCK_SIZE];
     int size;
     int last = 0;
     
@@ -111,23 +113,23 @@ int crypt_file(char *infile, char *outfile, char *keyfile)
         return 1;
     }
     
-    while ((size = fread(block, sizeof(uint8_t), 512, f)) == 512 || (size > 0 && feof(f) && !last))
+    while ((size = fread(block, sizeof(uint8_t), BLOCK_SIZE, f)) == BLOCK_SIZE || (size > 0 && feof(f) && !last))
     {
         int i = 0;
-        for (i = size; i < 512; i++)
+        for (i = size; i < BLOCK_SIZE; i++)
         {
             block[i] = '0';
         }
         
         crypt((uint32_t *)block, 128, key);
         
-        if (size < 512)
+        if (size < BLOCK_SIZE)
         {
             last = 1;
         }
         
-        size = fwrite(block, sizeof(uint8_t), 512, of);
-        if (size < 512)
+        size = fwrite(block, sizeof(uint8_t), BLOCK_SIZE, of);
+        if (size < BLOCK_SIZE)
         {
             fprintf(stderr, "Error while writing into '%s'.\n", outfile);
             fclose(f);
@@ -146,7 +148,7 @@ int decrypt_file(char *infile, char *outfile, char *keyfile)
     FILE * f;
     FILE * of;
     uint32_t key[KEY_PARTS_COUNT] = {0,0,0,0};
-    uint8_t block[512];
+    uint8_t block[BLOCK_SIZE];
     int size;
     
     if (read_key(keyfile, key) != 0)
@@ -167,12 +169,12 @@ int decrypt_file(char *infile, char *outfile, char *keyfile)
         return 1;
     }
     
-    while ((size = fread(block, sizeof(uint8_t), 512, f)) == 512 )
+    while ((size = fread(block, sizeof(uint8_t), BLOCK_SIZE, f)) == BLOCK_SIZE)
     {      
         decrypt((uint32_t *)block, 128, key);
                 
-        size = fwrite(block, sizeof(uint8_t), 512, of);
-        if (size < 512)
+        size = fwrite(block, sizeof(uint8_t), BLOCK_SIZE, of);
+        if (size < BLOCK_SIZE)
         {
             fprintf(stderr, "Error while writing into '%s'.\n", outfile);
             fclose(f);
