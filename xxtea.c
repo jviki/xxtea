@@ -55,6 +55,7 @@ uint32_t parse_key_part(char *s_key, size_t offset)
 }
 
 #define KEY_PARTS_COUNT 4
+
 int read_key(char *keyfile, uint32_t *key)
 {
     char s_key [S_KEY_CAP];
