@@ -85,6 +85,7 @@ int read_key(char *keyfile, uint32_t *key)
 }
 
 #define BLOCK_SIZE 512
+#define CRYPT_ATONCE_SIZE 128
 
 int crypt_file(char *infile, char *outfile, char *keyfile)
 {
@@ -121,7 +122,7 @@ int crypt_file(char *infile, char *outfile, char *keyfile)
             block[i] = '0';
         }
         
-        crypt((uint32_t *)block, 128, key);
+        crypt((uint32_t *)block, CRYPT_ATONCE_SIZE, key);
         
         if (size < BLOCK_SIZE)
         {
@@ -171,7 +172,7 @@ int decrypt_file(char *infile, char *outfile, char *keyfile)
     
     while ((size = fread(block, sizeof(uint8_t), BLOCK_SIZE, f)) == BLOCK_SIZE)
     {      
-        decrypt((uint32_t *)block, 128, key);
+        decrypt((uint32_t *)block, CRYPT_ATONCE_SIZE, key);
                 
         size = fwrite(block, sizeof(uint8_t), BLOCK_SIZE, of);
         if (size < BLOCK_SIZE)
