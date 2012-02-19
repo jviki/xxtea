@@ -88,7 +88,7 @@ int crypt_file(char *infile, char *outfile, char *keyfile)
 {
     FILE * f;
     FILE * of;
-    uint32_t key[4] = {0,0,0,0};
+    uint32_t key[KEY_PARTS_COUNT] = {0,0,0,0};
     uint8_t block[512];
     int size;
     int last = 0;
@@ -145,7 +145,7 @@ int decrypt_file(char *infile, char *outfile, char *keyfile)
 {
     FILE * f;
     FILE * of;
-    uint32_t key[4] = {0,0,0,0};
+    uint32_t key[KEY_PARTS_COUNT] = {0,0,0,0};
     uint8_t block[512];
     int size;
     
